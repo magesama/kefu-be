@@ -1,0 +1,19 @@
+spring:
+  # 其他配置...
+
+  # 文件上传配置
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+# MinIO配置
+minio:
+  endpoint: http://localhost:9000
+  access-key: minioadmin
+  secret-key: minioadmin
+  document-bucket: document-bucket
+
+# Qwen配置
+qwen:
+  api-key: ${QWEN_API_KEY:your-api-key-here}  # 从环境变量获取，如果没有则使用默认值 

@@ -1,0 +1,120 @@
+{
+  "log_index": {
+    "settings": {
+      "number_of_shards": 3,
+      "number_of_replicas": 1,
+      "analysis": {
+        "analyzer": {
+          "smartcn_analyzer": {
+            "type": "smartcn"
+          }
+        }
+      }
+    },
+    "mappings": {
+      "properties": {
+        "userId": {
+          "type": "keyword"
+        },
+        "apiPath": {
+          "type": "keyword"
+        },
+        "requestTime": {
+          "type": "date"
+        },
+        "requestBody": {
+          "type": "text",
+          "analyzer": "smartcn_analyzer"
+        },
+        "responseBody": {
+          "type": "text",
+          "analyzer": "smartcn_analyzer"
+        },
+        "status": {
+          "type": "keyword"
+        },
+        "errorMessage": {
+          "type": "text",
+          "analyzer": "smartcn_analyzer"
+        },
+        "executionTime": {
+          "type": "long"
+        },
+        "method": {
+          "type": "keyword"
+        },
+        "ip": {
+          "type": "keyword"
+        },
+        "userAgent": {
+          "type": "keyword"
+        },
+        "className": {
+          "type": "keyword"
+        },
+        "methodName": {
+          "type": "keyword"
+        }
+      }
+    }
+  },
+  "error_log_index": {
+    "settings": {
+      "number_of_shards": 3,
+      "number_of_replicas": 1,
+      "analysis": {
+        "analyzer": {
+          "smartcn_analyzer": {
+            "type": "smartcn"
+          }
+        }
+      }
+    },
+    "mappings": {
+      "properties": {
+        "userId": {
+          "type": "keyword"
+        },
+        "apiPath": {
+          "type": "keyword"
+        },
+        "requestTime": {
+          "type": "date"
+        },
+        "requestBody": {
+          "type": "text",
+          "analyzer": "smartcn_analyzer"
+        },
+        "errorMessage": {
+          "type": "text",
+          "analyzer": "smartcn_analyzer"
+        },
+        "errorStack": {
+          "type": "text",
+          "analyzer": "smartcn_analyzer"
+        },
+        "method": {
+          "type": "keyword"
+        },
+        "ip": {
+          "type": "keyword"
+        },
+        "userAgent": {
+          "type": "keyword"
+        },
+        "className": {
+          "type": "keyword"
+        },
+        "methodName": {
+          "type": "keyword"
+        },
+        "errorType": {
+          "type": "keyword"
+        },
+        "errorLevel": {
+          "type": "keyword"
+        }
+      }
+    }
+  }
+} 

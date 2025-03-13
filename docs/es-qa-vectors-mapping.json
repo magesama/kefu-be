@@ -1,0 +1,61 @@
+{
+  "mappings": {
+    "properties": {
+      "userId": {
+        "type": "long"
+      },
+      "productId": {
+        "type": "long"
+      },
+      "productName": {
+        "type": "keyword"
+      },
+      "shopId": {
+        "type": "long"
+      },
+      "shopName": {
+        "type": "keyword"
+      },
+      "documentId": {
+        "type": "long"
+      },
+      "question": {
+        "type": "text",
+        "analyzer": "smartcn",
+        "search_analyzer": "smartcn"
+      },
+      "answer": {
+        "type": "text",
+        "analyzer": "smartcn",
+        "search_analyzer": "smartcn"
+      },
+      "question_vector": {
+        "type": "dense_vector",
+        "dims": 512,
+        "index": true,
+        "similarity": "cosine"
+      },
+      "answer_vector": {
+        "type": "dense_vector",
+        "dims": 512,
+        "index": true,
+        "similarity": "cosine"
+      },
+      "createTime": {
+        "type": "date"
+      },
+      "updateTime": {
+        "type": "date"
+      }
+    }
+  },
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "smartcn": {
+          "tokenizer": "smartcn_tokenizer"
+        }
+      }
+    }
+  }
+} 
