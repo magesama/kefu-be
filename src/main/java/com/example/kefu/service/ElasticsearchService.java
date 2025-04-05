@@ -662,9 +662,9 @@ public class ElasticsearchService {
             mustConditions.add(buildTermQuery("shopName", shopName));
         }
         
-        // 如果提供了产品名称，添加产品名称精确匹配
+        // 如果提供了产品名称，添加产品名称模糊匹配（而不是精确匹配）
         if (productName != null && !productName.trim().isEmpty()) {
-            mustConditions.add(buildTermQuery("productName", productName));
+            mustConditions.add(buildMatchQuery("productName", productName));
         }
         
         // 构建bool查询
@@ -739,9 +739,9 @@ public class ElasticsearchService {
             mustConditions.add(buildTermQuery("shopName", shopName));
         }
         
-        // 如果提供了产品名称，添加产品名称精确匹配
+        // 如果提供了产品名称，添加产品名称模糊匹配（而不是精确匹配）
         if (productName != null && !productName.trim().isEmpty()) {
-            mustConditions.add(buildTermQuery("productName", productName));
+            mustConditions.add(buildMatchQuery("productName", productName));
         }
         
         // 构建bool查询
@@ -806,9 +806,9 @@ public class ElasticsearchService {
             mustConditions.add(buildTermQuery("shopName", shopName));
         }
         
-        // 如果提供了产品名称，添加产品名称精确匹配
+        // 如果提供了产品名称，添加产品名称模糊匹配（而不是精确匹配）
         if (productName != null && !productName.trim().isEmpty()) {
-            mustConditions.add(buildTermQuery("productName", productName));
+            mustConditions.add(buildMatchQuery("productName", productName));
         }
         
         // 构建bool查询
@@ -948,5 +948,34 @@ public class ElasticsearchService {
         multiMatch.put("multi_match", multiMatchValue);
         
         return multiMatch;
+    }
+
+    /**
+     * 根据产品ID查询问答对
+     * 
+     * @param indexName 索引名称
+     * @param productId 产品ID
+     * @param size 返回结果数量
+     * @param includeFields 要包含的字段列表
+     * @return 查询结果
+     * @throws IOException 如果查询失败
+     */
+    public Map<String, Object> searchByProductId(String indexName, Long productId, int size, 
+                                               List<String> includeFields) throws IOException {
+        // 构建必须满足的条件
+        List<Map<String, Object>> mustConditions = new ArrayList<>();
+        
+        // 产品ID精确匹配
+        mustConditions.add(buildTermQuery("productId", productId));
+        
+        // 构建bool查询
+        Map<String, Object> boolQuery = buildBoolQuery(mustConditions, null, null);
+        
+        // 构建完整的DSL查询
+        Map<String, Object> dslQuery = buildDslQuery(boolQuery, size, null, null, includeFields, null);
+        
+        // 执行查询
+        String dslQueryJson = convertToJson(dslQuery);
+        return executeDslQuery(indexName + "/_search", "GET", dslQueryJson);
     }
 } 

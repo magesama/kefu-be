@@ -56,6 +56,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         user.setEmail(request.getEmail());
         user.setBalance(BigDecimal.ZERO);
         user.setStatus(1); // 默认正常状态
+        user.setRole(request.getRole()); // 设置用户角色
         user.setCreateTime(LocalDateTime.now());
         user.setUpdateTime(LocalDateTime.now());
         
@@ -147,50 +148,42 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
     
     @Override
-    public List<UserInfoResponse> getUserList(String username, Integer status, int page, int size) {
-        // 构建查询条件
-        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
+    public List<UserInfoResponse> getUserList(String username, Integer status, Integer role, int page, int size) {
+        // 计算偏移量
+        int offset = (page - 1) * size;
         
-        // 添加用户名模糊查询条件（如果提供）
-        if (StringUtils.hasText(username)) {
-            queryWrapper.like(User::getUsername, username);
-        }
-        
-        // 添加状态查询条件（如果提供）
-        if (status != null) {
-            queryWrapper.eq(User::getStatus, status);
-        }
-        
-        // 按创建时间降序排序
-        queryWrapper.orderByDesc(User::getCreateTime);
-        
-        // 执行分页查询
-        Page<User> userPage = new Page<>(page, size);
-        Page<User> resultPage = userMapper.selectPage(userPage, queryWrapper);
+        // 使用自定义方法查询用户列表
+        List<User> users = userMapper.selectUserList(username, status, role, offset, size);
         
         // 转换为响应对象列表
-        return resultPage.getRecords().stream()
+        return users.stream()
                 .map(this::convertToUserInfoResponse)
                 .collect(Collectors.toList());
     }
     
     @Override
-    public long getUserCount(String username, Integer status) {
-        // 构建查询条件
-        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
-        
-        // 添加用户名模糊查询条件（如果提供）
-        if (StringUtils.hasText(username)) {
-            queryWrapper.like(User::getUsername, username);
+    public long getUserCount(String username, Integer status, Integer role) {
+        // 使用自定义方法统计用户总数
+        return userMapper.countUserList(username, status, role);
+    }
+    
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean updateUserRole(Long userId, Integer role) {
+        // 检查角色值是否有效
+        if (role != 0 && role != 1) {
+            throw new RuntimeException("无效的角色值，只能是0（普通用户）或1（管理员）");
         }
         
-        // 添加状态查询条件（如果提供）
-        if (status != null) {
-            queryWrapper.eq(User::getStatus, status);
+        // 查询用户
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new RuntimeException("用户不存在");
         }
         
-        // 执行计数查询
-        return userMapper.selectCount(queryWrapper);
+        // 使用自定义方法更新用户角色
+        LocalDateTime updateTime = LocalDateTime.now();
+        return userMapper.updateUserRole(userId, role, updateTime) > 0;
     }
     
     /**

@@ -54,17 +54,27 @@ public interface UserService {
      * 获取用户列表
      * @param username 用户名（可选，用于模糊查询）
      * @param status 用户状态（可选）
+     * @param role 用户角色（可选）
      * @param page 页码，从1开始
      * @param size 每页大小
      * @return 用户信息列表
      */
-    List<UserInfoResponse> getUserList(String username, Integer status, int page, int size);
+    List<UserInfoResponse> getUserList(String username, Integer status, Integer role, int page, int size);
     
     /**
      * 获取用户总数
      * @param username 用户名（可选，用于模糊查询）
      * @param status 用户状态（可选）
+     * @param role 用户角色（可选）
      * @return 用户总数
      */
-    long getUserCount(String username, Integer status);
+    long getUserCount(String username, Integer status, Integer role);
+    
+    /**
+     * 更新用户角色
+     * @param userId 用户ID
+     * @param role 角色值：0-普通用户，1-管理员
+     * @return 更新是否成功
+     */
+    boolean updateUserRole(Long userId, Integer role);
 } 

@@ -196,7 +196,7 @@ public class UserDocumentServiceImpl extends ServiceImpl<UserDocumentMapper, Use
                 throw new RuntimeException("处理文档失败: " + e.getMessage());
             }
         } catch (Exception e) {
-            log.error("上传文档失败", e);
+            log.error("上传文档失败", e);e.printStackTrace();
             throw new RuntimeException("上传文档失败: " + e.getMessage());
         }
     }

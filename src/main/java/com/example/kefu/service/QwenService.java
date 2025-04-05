@@ -229,6 +229,55 @@ public class QwenService {
         }
     }
 
+
+
+    /**
+     * 聊天测试接口
+     *
+     * @param question 用户问题
+     * @return 回答内容
+     */
+    public String chatTest(String question) {
+        try {
+            // 系统提示语
+            Message systemMsg = Message.builder()
+                    .role(Role.SYSTEM.getValue())
+                    .content("你是一个专业的恋爱助手，请专业地和对方聊天。")
+                    .build();
+
+            // 用户问题
+            Message userMsg = Message.builder()
+                    .role(Role.USER.getValue())
+                    .content(question)
+                    .build();
+
+            // 构建请求参数
+            GenerationParam param = GenerationParam.builder()
+                    .model("qwen-plus") // 可选：qwen-turbo, qwen-plus, qwen-max
+                    .apiKey(apiKey)
+                    .messages(Arrays.asList(systemMsg, userMsg))
+                    .resultFormat(GenerationParam.ResultFormat.MESSAGE)
+                    .topP(0.8)
+                    .enableSearch(true)
+                    .build();
+
+            // 调用模型
+            GenerationResult result = generation.call(param);
+
+            // 返回结果
+            if (result != null && result.getOutput() != null && result.getOutput().getChoices() != null
+                    && !result.getOutput().getChoices().isEmpty()
+                    && result.getOutput().getChoices().get(0).getMessage() != null) {
+                return result.getOutput().getChoices().get(0).getMessage().getContent();
+            } else {
+                return "抱歉，无法获取回答。";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "抱歉，处理您的问题时出现了错误：" + e.getMessage();
+        }
+    }
+
     /**
      * 上传文件并提取文本内容
      *

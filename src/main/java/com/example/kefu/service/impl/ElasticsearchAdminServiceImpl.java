@@ -254,26 +254,7 @@ public class ElasticsearchAdminServiceImpl implements ElasticsearchAdminService 
      * 处理搜索响应
      */
     private SearchResult processSearchResponse(SearchResponse response) {
-        // 先转换为ElasticsearchResult
-        ElasticsearchResult esResult = processElasticsearchResponse(response);
-        
-        // 再转换为SearchResult
-        SearchResult result = new SearchResult();
-        if (!esResult.getHits().isEmpty()) {
-            ElasticsearchResult.Hit hit = esResult.getHits().get(0);
-            result.setQuestion((String) hit.getSource().get("question"));
-            result.setAnswer((String) hit.getSource().get("answer"));
-            result.setScore(hit.getScore());
-            // TODO: 如果需要vector字段，从source中获取
-        }
-        return result;
-    }
-
-    /**
-     * 处理ES搜索响应
-     */
-    private ElasticsearchResult processElasticsearchResponse(SearchResponse response) {
-        List<ElasticsearchResult.Hit> hits = new ArrayList<>();
+        List<SearchResult.Hit> hits = new ArrayList<>();
         
         for (SearchHit hit : response.getHits().getHits()) {
             Map<String, List<String>> highlightFields = new HashMap<>();
@@ -285,7 +266,7 @@ public class ElasticsearchAdminServiceImpl implements ElasticsearchAdminService 
                 });
             }
             
-            hits.add(ElasticsearchResult.Hit.builder()
+            hits.add(SearchResult.Hit.builder()
                     .id(hit.getId())
                     .source(hit.getSourceAsMap())
                     .highlight(highlightFields)
@@ -293,7 +274,7 @@ public class ElasticsearchAdminServiceImpl implements ElasticsearchAdminService 
                     .build());
         }
         
-        return ElasticsearchResult.builder()
+        return SearchResult.builder()
                 .total(response.getHits().getTotalHits().value)
                 .hits(hits)
                 .build();

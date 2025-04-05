@@ -89,32 +89,51 @@ public class UserController {
     
     /**
      * 获取用户列表
-     * @param username 用户名（可选，用于模糊查询）
-     * @param status 用户状态（可选）
-     * @param page 页码，从1开始
+     * @param username 用户名（可选，模糊查询）
+     * @param status 状态（可选）
+     * @param role 角色（可选）
+     * @param page 页码
      * @param size 每页大小
-     * @return 用户列表和总数
+     * @return 用户列表
      */
     @GetMapping("/list")
-    public ApiResponse<Map<String, Object>> getUserList(
+    public ApiResponse<List<UserInfoResponse>> getUserList(
             @RequestParam(required = false) String username,
             @RequestParam(required = false) Integer status,
+            @RequestParam(required = false) Integer role,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
-        
-        // 查询用户列表
-        List<UserInfoResponse> users = userService.getUserList(username, status, page, size);
-        
-        // 查询用户总数
-        long total = userService.getUserCount(username, status);
-        
-        // 构建响应结果
-        Map<String, Object> result = new HashMap<>();
-        result.put("users", users);
-        result.put("total", total);
-        result.put("page", page);
-        result.put("size", size);
-        
-        return ApiResponse.success(result);
+        List<UserInfoResponse> userList = userService.getUserList(username, status, role, page, size);
+        return ApiResponse.success(userList);
+    }
+    
+    /**
+     * 获取用户总数
+     * @param username 用户名（可选，模糊查询）
+     * @param status 状态（可选）
+     * @param role 角色（可选）
+     * @return 用户总数
+     */
+    @GetMapping("/count")
+    public ApiResponse<Long> getUserCount(
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) Integer status,
+            @RequestParam(required = false) Integer role) {
+        long count = userService.getUserCount(username, status, role);
+        return ApiResponse.success(count);
+    }
+    
+    /**
+     * 更新用户角色
+     * @param userId 用户ID
+     * @param role 角色（0-普通用户，1-管理员）
+     * @return 更新结果
+     */
+    @PutMapping("/{userId}/role")
+    public ApiResponse<Boolean> updateUserRole(
+            @PathVariable Long userId,
+            @RequestParam Integer role) {
+        boolean success = userService.updateUserRole(userId, role);
+        return ApiResponse.success(success);
     }
 } 

@@ -18,4 +18,9 @@ public class ChatRequest {
 
 
     private Integer userId;
+    
+    /**
+     * 聊天窗口ID，用于标识多轮对话的上下文
+     */
+    private String tableId;
 } 

@@ -107,8 +107,7 @@ public class ElasticsearchController {
      * 获取集群健康状态
      */
     @GetMapping("/cluster/health")
-    public Map<String, Object> getClusterHealth() {
-        Map<String, Object> result = new HashMap<>();
+    public ApiResponse<Map<String, Object>> getClusterHealth() {
         try {
             // 由于ElasticsearchAdminService没有提供getClusterHealth方法，我们需要自己实现
             // 这里简化处理，返回一个基本的健康状态信息
@@ -123,14 +122,10 @@ public class ElasticsearchController {
             healthInfo.put("initializingShards", 0);
             healthInfo.put("unassignedShards", 0);
             
-            result.put("code", 0);
-            result.put("message", "success");
-            result.put("data", healthInfo);
+            return ApiResponse.success(healthInfo);
         } catch (Exception e) {
-            result.put("code", 2001);
-            result.put("message", "获取集群健康状态失败: " + e.getMessage());
+            return ApiResponse.error(2001, "获取集群健康状态失败: " + e.getMessage());
         }
-        return result;
     }
 
     /**
@@ -139,61 +134,20 @@ public class ElasticsearchController {
      * @param indexName 索引名称
      * @param indexJson 索引配置JSON字符串，包含settings和mappings
      * @return 创建结果
-     * 
-     * 示例请求：
-     * POST /api/es/create-index?indexName=test_vectors
-     * 请求体：
-     * {
-     *   "settings": {
-     *     "number_of_shards": 3,
-     *     "number_of_replicas": 1,
-     *     "analysis": {
-     *       "analyzer": {
-     *         "smartcn_analyzer": {
-     *           "type": "smartcn"
-     *         }
-     *       }
-     *     }
-     *   },
-     *   "mappings": {
-     *     "properties": {
-     *       "title": {
-     *         "type": "text",
-     *         "analyzer": "smartcn_analyzer"
-     *       },
-     *       "content": {
-     *         "type": "text",
-     *         "analyzer": "smartcn_analyzer"
-     *       },
-     *       "vector": {
-     *         "type": "dense_vector",
-     *         "dims": 512
-     *       }
-     *     }
-     *   }
-     * }
-     * 
-     * 响应：
-     * {
-     *   "success": true,
-     *   "message": "索引创建成功"
-     * }
      */
     @PostMapping("/create-index")
-    public Map<String, Object> createCustomIndex(
+    public ApiResponse<Map<String, Object>> createCustomIndex(
             @RequestParam String indexName,
             @RequestBody String indexJson) {
         Map<String, Object> result = new HashMap<>();
         try {
             boolean created = elasticsearchService.createCustomIndex(indexName, indexJson);
-            result.put("success", true);
+            result.put("success", created);
             result.put("message", created ? "索引创建成功" : "索引已存在");
+            return ApiResponse.success(result);
         } catch (IOException e) {
-            result.put("success", false);
-            result.put("error", e.getMessage());
-            e.printStackTrace();
+            return ApiResponse.error(2003, "创建索引失败: " + e.getMessage());
         }
-        return result;
     }
 
     /**
@@ -201,29 +155,18 @@ public class ElasticsearchController {
      * 
      * @param indexName 要删除的索引名称
      * @return 删除结果
-     * 
-     * 示例请求：
-     * DELETE /api/es/delete-index?indexName=test_vectors
-     * 
-     * 响应：
-     * {
-     *   "success": true,
-     *   "message": "索引删除成功"
-     * }
      */
     @DeleteMapping("/delete-index")
-    public Map<String, Object> deleteCustomIndex(@RequestParam String indexName) {
+    public ApiResponse<Map<String, Object>> deleteCustomIndex(@RequestParam String indexName) {
         Map<String, Object> result = new HashMap<>();
         try {
             boolean deleted = elasticsearchService.deleteCustomIndex(indexName);
-            result.put("success", true);
+            result.put("success", deleted);
             result.put("message", deleted ? "索引删除成功" : "索引不存在");
+            return ApiResponse.success(result);
         } catch (IOException e) {
-            result.put("success", false);
-            result.put("error", e.getMessage());
-            e.printStackTrace();
+            return ApiResponse.error(2003, "删除索引失败: " + e.getMessage());
         }
-        return result;
     }
 
     /**
@@ -232,27 +175,9 @@ public class ElasticsearchController {
      * @param indexName 索引名称
      * @param request 包含文档内容的请求体
      * @return 存储结果
-     * 
-     * 示例请求：
-     * POST /api/es/vector-store-custom-index?indexName=test_vectors
-     * 请求体：
-     * {
-     *   "content": "如何申请退款？",
-     *   "title": "退款申请流程",
-     *   "category": "退款相关",
-     *   "tags": ["退款", "售后"]
-     * }
-     * 
-     * 响应：
-     * {
-     *   "success": true,
-     *   "id": "xxx",
-     *   "indexName": "test_vectors",
-     *   "vectorDimensions": 512
-     * }
      */
     @PostMapping("/vector-store-custom-index")
-    public Map<String, Object> generateAndStoreVectorToCustomIndex(
+    public ApiResponse<Map<String, Object>> generateAndStoreVectorToCustomIndex(
             @RequestParam String indexName,
             @RequestBody Map<String, Object> request) {
         Map<String, Object> result = new HashMap<>();
@@ -294,11 +219,10 @@ public class ElasticsearchController {
             result.put("id", id);
             result.put("indexName", indexName);
             result.put("vectorDimensions", embeddingResponse.getData().get(0).getEmbedding().size());
+            return ApiResponse.success(result);
         } catch (Exception e) {
-            result.put("success", false);
-            result.put("error", e.getMessage());
+            return ApiResponse.error(3001, "生成向量并存储文档失败: " + e.getMessage());
         }
-        return result;
     }
 
     /**
@@ -307,33 +231,9 @@ public class ElasticsearchController {
      * @param indexName 索引名称
      * @param request 包含查询文本的请求体
      * @return 搜索结果
-     * 
-     * 示例请求：
-     * POST /api/es/custom-vector-search?indexName=test_vectors
-     * 请求体：
-     * {
-     *   "query": "如何退款？商品不满意",
-     *   "size": 5
-     * }
-     * 
-     * 响应：
-     * {
-     *   "success": true,
-     *   "data": [
-     *     {
-     *       "_id": "xxx",
-     *       "_score": 0.95,
-     *       "title": "退款申请流程",
-     *       "content": "如何申请退款？",
-     *       ...
-     *     }
-     *   ],
-     *   "query": "如何退款？商品不满意",
-     *   "indexName": "test_vectors"
-     * }
      */
     @PostMapping("/custom-vector-search")
-    public Map<String, Object> customVectorSearch(
+    public ApiResponse<Map<String, Object>> customVectorSearch(
             @RequestParam String indexName,
             @RequestBody Map<String, Object> request) {
         Map<String, Object> result = new HashMap<>();
@@ -363,11 +263,10 @@ public class ElasticsearchController {
             result.put("data", results);
             result.put("query", queryText);
             result.put("indexName", indexName);
+            return ApiResponse.success(result);
         } catch (Exception e) {
-            result.put("success", false);
-            result.put("error", e.getMessage());
+            return ApiResponse.error(3001, "向量相似度搜索失败: " + e.getMessage());
         }
-        return result;
     }
 
     /**
@@ -376,35 +275,9 @@ public class ElasticsearchController {
      * @param indexName 索引名称
      * @param request 包含查询条件的请求体
      * @return 搜索结果
-     * 
-     * 示例请求：
-     * POST /api/es/custom-text-search?indexName=test_vectors
-     * 请求体：
-     * {
-     *   "query": "退款",
-     *   "fields": ["title", "content"],
-     *   "size": 5
-     * }
-     * 
-     * 响应：
-     * {
-     *   "success": true,
-     *   "data": [
-     *     {
-     *       "_id": "xxx",
-     *       "_score": 0.8,
-     *       "title": "退款申请流程",
-     *       "content": "如何申请退款？",
-     *       ...
-     *     }
-     *   ],
-     *   "query": "退款",
-     *   "fields": ["title", "content"],
-     *   "indexName": "test_vectors"
-     * }
      */
     @PostMapping("/custom-text-search")
-    public Map<String, Object> customTextSearch(
+    public ApiResponse<Map<String, Object>> customTextSearch(
             @RequestParam String indexName,
             @RequestBody Map<String, Object> request) {
         Map<String, Object> result = new HashMap<>();
@@ -428,46 +301,20 @@ public class ElasticsearchController {
             result.put("query", queryText);
             result.put("fields", fields);
             result.put("indexName", indexName);
+            return ApiResponse.success(result);
         } catch (Exception e) {
-            result.put("success", false);
-            result.put("error", e.getMessage());
+            return ApiResponse.error(3001, "全文检索失败: " + e.getMessage());
         }
-        return result;
     }
     
     /**
      * 执行原始DSL查询
      * 
-     * @param endpoint Elasticsearch API端点，例如 "_search", "my_index/_search", "_cat/indices" 等
-     * @param method HTTP方法，例如 "GET", "POST", "PUT", "DELETE"
-     * @param dslQuery DSL查询JSON字符串（可选，取决于请求类型）
+     * @param request 包含endpoint、method和dslQuery的请求体
      * @return 查询结果
-     * 
-     * 示例请求：
-     * POST /api/es/dsl
-     * 请求体：
-     * {
-     *   "endpoint": "log_index/_search",
-     *   "method": "POST",
-     *   "dslQuery": {
-     *     "query": {
-     *       "match_all": {}
-     *     },
-     *     "size": 100
-     *   }
-     * }
-     * 
-     * 响应：
-     * {
-     *   "success": true,
-     *   "statusCode": 200,
-     *   "result": {
-     *     // Elasticsearch 返回的原始结果
-     *   }
-     * }
      */
     @PostMapping("/dsl")
-    public Map<String, Object> executeDsl(@RequestBody Map<String, Object> request) {
+    public ApiResponse<Map<String, Object>> executeDsl(@RequestBody Map<String, Object> request) {
         Map<String, Object> result = new HashMap<>();
         try {
             // 从请求中获取参数
@@ -492,10 +339,9 @@ public class ElasticsearchController {
             result.put("success", true);
             result.put("statusCode", queryResult.get("statusCode"));
             result.put("result", queryResult.get("body"));
+            return ApiResponse.success(result);
         } catch (Exception e) {
-            result.put("success", false);
-            result.put("error", e.getMessage());
+            return ApiResponse.error(2003, "执行DSL查询失败: " + e.getMessage());
         }
-        return result;
     }
 } 
